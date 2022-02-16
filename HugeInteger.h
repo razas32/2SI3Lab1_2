@@ -14,8 +14,7 @@ class HugeInteger
 {
 private:
 	
-	int isPositive = 0;
-	int isNegative = 0;
+
 	vector<int> huge;
 
 
@@ -28,10 +27,12 @@ public:
 	HugeInteger(int n);
 	HugeInteger(std::vector<int>& sum);
 	HugeInteger add(const HugeInteger& h);
-	HugeInteger subtract(const HugeInteger& h);
+	HugeInteger subtract(const HugeInteger& h) const;
 	HugeInteger multiply(const HugeInteger& h);
 	int compareTo(const HugeInteger& h);
 	std::string toString();
+	int isPositive = 0;
+	int isNegative = 0;
 };
 
 #endif /* HUGEINTEGER_H_ */

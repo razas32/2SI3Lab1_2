@@ -59,75 +59,94 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 	int carry = 0, temp_sum = 0, i = 0, j = 0, k = 0;     //carry being our carry value, temp_sum being the sum of two corresponding indicies
 	int huge_size = huge.size();                        //i j and k representing counters to keep our math organized
 	int h_size = h.huge.size();                         //lastly, our two variables representing size of our huges
-	int sumsize = 0;
+
 
 	vector<int> sum;
+	if( (this->isPositive == 1 && h.isPositive == 1) || (this->isNegative == 1 && h.isNegative == 1) ){ //Algorithm for two positives or two negatives will be the same. Confirm negative or not at the end.
 
-	if (huge_size >= h_size){                           //if our huge size is larger than or equal to h
-		i = huge_size - 1;                              //starting from the very last index (like addition on paper)
-		j = h_size - 1;
-		k = huge_size -1;                              //k represents the size of our sum, so it must be the same as the larger array
+		if (huge_size >= h_size){                           //if our huge size is larger than or equal to h
+			i = huge_size - 1;                              //starting from the very last index (like addition on paper)
+			j = h_size - 1;
+			k = huge_size -1;                              //k represents the size of our sum, so it must be the same as the larger array
 
 
-		while(j>=0){                                      //loop until we run out of indicies for the smaller array
-			temp_sum = huge[i] + h.huge[j] + carry;   //find the sum of the corresponding indicies with carry if needed and store it in temp_sum
-			sum.insert(sum.begin(),(temp_sum%10));       //take mod 10 to guarantee one digit, and then convert back to a string character
-			carry = temp_sum/10;                          //carry will be one if the number is between 10 and 19, and 0 if between 0 and 9
+			while(j>=0){                                      //loop until we run out of indicies for the smaller array
+				temp_sum = huge[i] + h.huge[j] + carry;   //find the sum of the corresponding indicies with carry if needed and store it in temp_sum
+				sum.insert(sum.begin(),(temp_sum%10));       //take mod 10 to guarantee one digit, and then convert back to a string character
+				carry = temp_sum/10;                          //carry will be one if the number is between 10 and 19, and 0 if between 0 and 9
 
-			i--;                                          //decrement all values and move to the next index
-			k--;
-			j--;
+				i--;                                          //decrement all values and move to the next index
+				k--;
+				j--;
+			}
+
+			while(i>=0){                              //since i > j, there is remaining values at the start of our larger array
+				temp_sum = huge[i] + carry;                 //use the same process to store them in temp_sum, using carry if needed
+				sum.insert(sum.begin(),(temp_sum%10));       //append the to the corresponding index in character type
+				carry = temp_sum/10;
+
+				i--;                                          //decrement till i and k are 0, meaning our summation is finished
+				k--;
+			}
+			if(carry == 1){
+				sum.insert(sum.begin(),(carry));
+			}
 		}
 
-		while(i>=0){                              //since i > j, there is remaining values at the start of our larger array
-			temp_sum = huge[i] + carry;                 //use the same process to store them in temp_sum, using carry if needed
-			sum.insert(sum.begin(),(temp_sum%10));       //append the to the corresponding index in character type
-			carry = temp_sum/10;
+		else if(h_size > huge_size){                      //this is essentially the exact same thing, but h is bigger than huge.
+			j = huge_size - 1;                             //the only edits i must make to my code above is let i be the size of h instead of huge
+			i = h_size - 1;
+			k = h_size - 1;
 
-			i--;                                          //decrement till i and k are 0, meaning our summation is finished
-			k--;
+			while(j>=0){
+				temp_sum = huge[j] + h.huge[i] + carry;
+				sum.insert(sum.begin(),(temp_sum%10));
+				carry = temp_sum/10;
+
+				i--;
+				k--;
+				j--;
+			}
+
+			while(i>=0){
+				temp_sum = h.huge[i] + carry;
+				sum.insert(sum.begin(),(temp_sum%10));
+				carry = temp_sum/10;
+
+				i--;
+				k--;
+			}
+
+			if(carry == 1){
+				sum.insert(sum.begin(),(carry));
+			}
+
 		}
-		if(carry == 1){
-			sum.insert(sum.begin(),(carry));
+		HugeInteger res = HugeInteger(sum);
+		if (this->isNegative == 1 && h.isNegative == 1){ //if both numbers are negative, then we know result will be negative. Let isNegative equal 1.
+			res.isNegative = 1;
 		}
+		return res;
 	}
 
-	else if(h_size > huge_size){                      //this is essentially the exact same thing, but h is bigger than huge.
-		j = huge_size - 1;                             //the only edits i must make to my code above is let i be the size of h instead of huge
-		i = h_size - 1;
-		k = h_size - 1;
-
-		while(j>=0){
-			temp_sum = huge[j] + h.huge[i] + carry;
-			sum.insert(sum.begin(),(temp_sum%10));
-			carry = temp_sum/10;
-
-			i--;
-			k--;
-			j--;
-		}
-
-		while(i>=0){
-			temp_sum = h.huge[i] + carry;
-			sum.insert(sum.begin(),(temp_sum%10));
-			carry = temp_sum/10;
-
-			i--;
-			k--;
-		}
-
-		if(carry == 1){
-			sum.insert(sum.begin(),(carry));
-		}
-
+	else if(this->isNegative == 0 && h.isNegative == 1){ //
+		HugeInteger h2(h);
+		h2.isNegative = 0;
+		HugeInteger res = this->subtract(h2);
+		return res;
+	}
+	else if(this->isNegative == 1 && h.isNegative == 0){
+		HugeInteger h2(*this);
+		HugeInteger h3(h);
+		h2.isNegative = 0;
+		HugeInteger res = h2.subtract(h3);
+		return res;
 	}
 
-	return HugeInteger(sum);
 }
+HugeInteger HugeInteger::subtract(const HugeInteger& h) const {
 
-HugeInteger HugeInteger::subtract(const HugeInteger& h) {
-
-	int carry = 0, temp_diff = 0, i = 0, j = 0, k = 0;
+	int temp_diff = 0, i = 0, j = 0;
 	int huge_size = huge.size();
 	int h_size = h.huge.size();
 
@@ -136,19 +155,38 @@ HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 	if (huge_size > h_size){
 		i = huge_size - 1;
 		j = h_size - 1;
-		k = huge_size - 1;
+
 
 		while (j >= 0){
+
 			temp_diff = huge[i] - h.huge[j];
+
 			if (temp_diff < 0){
 				temp_diff = (temp_diff * -1);
 				huge[i-1] = huge[i-1] - 1;
 			}
+
+			else if (huge[i-1] == 0){
+					huge[i-1] = 9;
+					huge[i-2] = huge[i-2] - 1;
+				}
+
+
+			difference.insert(difference.begin(),(temp_diff));
+
+			i--;
+			j--;
+		}
+
+		while (i >= 0){
+			temp_diff = huge[i];
+			difference.insert(difference.begin(),(temp_diff));
+
+			i--;
 		}
 	}
 
-
-	return HugeInteger("");
+	return HugeInteger(difference);
 }
 
 HugeInteger HugeInteger::multiply(const HugeInteger& h) {
