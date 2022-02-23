@@ -25,13 +25,15 @@ public:
 	// Required methods
 	HugeInteger(const std::string& val);
 	HugeInteger(int n);
-	HugeInteger(std::vector<int>& sum);
+
+	HugeInteger(std::vector<int>& h);
+
 	HugeInteger add(const HugeInteger& h);
-	HugeInteger subtract(const HugeInteger& h) const;
+	HugeInteger subtract(const HugeInteger& h);
 	HugeInteger multiply(const HugeInteger& h);
 	int compareTo(const HugeInteger& h);
-	std::string toString();
-	int isPositive = 0;
+	std::string toString() const;
+
 	int isNegative = 0;
 };
 

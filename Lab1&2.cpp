@@ -16,7 +16,7 @@ int main() {
 
     double totalMark = 0;
 
-    string demoLab = "Lab2"; // set to Lab1 or Lab2
+    string demoLab = "Lab3"; // set to Lab1 or Lab2
 
     TestHugeInteger thi(num_display, max_run, max_invalid_string, max_size_array);
 
@@ -25,12 +25,12 @@ int main() {
         totalMark += thi.testConstructorNumber();
         totalMark += thi.testPositiveAddition();
     }else{
-    	HugeInteger num1 = HugeInteger("-111");
-    	HugeInteger num2 = HugeInteger("73");
+    	HugeInteger num1 = HugeInteger("95");
+    	HugeInteger num2 = HugeInteger("-102");
     	HugeInteger num3 = num1.add(num2);
     	cout << num3.toString() << endl;
 
-//        totalMark += thi.testAdditionSubtraction();
+        totalMark += thi.testAdditionSubtraction();
 //        totalMark += thi.testCompareTo();
 //        totalMark += thi.testMultiplication();
     }

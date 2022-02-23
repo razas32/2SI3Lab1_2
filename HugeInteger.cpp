@@ -3,14 +3,15 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
-HugeInteger::HugeInteger(std::vector<int>& sum){
-	huge = sum;
+HugeInteger::HugeInteger(std::vector<int>& h){  //constructor so i can pass vector ints into huge integer
+	huge = h;
 }
 
-HugeInteger::HugeInteger(const std::string& val) {
+HugeInteger::HugeInteger(const std::string& val){
 
 	int i = 0;
 	int n = val.length();
@@ -22,7 +23,7 @@ HugeInteger::HugeInteger(const std::string& val) {
 		i++;
 	}
 	else{                                                         //If there isn't a negative sign, let isPositive be 1
-		isPositive = 1;
+		isNegative = 0;
 	}
 	while(i < n){
 
@@ -53,7 +54,7 @@ HugeInteger::HugeInteger(int n) {
 
 }
 
-HugeInteger HugeInteger::add(const HugeInteger& h) {
+HugeInteger HugeInteger::add(const HugeInteger& h){
 
 
 	int carry = 0, temp_sum = 0, i = 0, j = 0, k = 0;     //carry being our carry value, temp_sum being the sum of two corresponding indicies
@@ -62,7 +63,8 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 
 
 	vector<int> sum;
-	if( (this->isPositive == 1 && h.isPositive == 1) || (this->isNegative == 1 && h.isNegative == 1) ){ //Algorithm for two positives or two negatives will be the same. Confirm negative or not at the end.
+
+	if( (this->isNegative == 0 && h.isNegative == 0) || (this->isNegative == 1 && h.isNegative == 1) ){ //Algorithm for two positives or two negatives will be the same. Confirm negative or not at the end.
 
 		if (huge_size >= h_size){                           //if our huge size is larger than or equal to h
 			i = huge_size - 1;                              //starting from the very last index (like addition on paper)
@@ -122,84 +124,235 @@ HugeInteger HugeInteger::add(const HugeInteger& h) {
 			}
 
 		}
-		HugeInteger res = HugeInteger(sum);
+		if (sum[0] == 0 && sum.size() != 1){  //destroys leading 0s. destroyed in the single digit same number case so we have to make sure sum size isnt one
+				sum.erase(sum.begin());
+			}
+		HugeInteger res = HugeInteger(sum);      // duplicate sum into res
 		if (this->isNegative == 1 && h.isNegative == 1){ //if both numbers are negative, then we know result will be negative. Let isNegative equal 1.
 			res.isNegative = 1;
 		}
 		return res;
 	}
 
-	else if(this->isNegative == 0 && h.isNegative == 1){ //
-		HugeInteger h2(h);
-		h2.isNegative = 0;
-		HugeInteger res = this->subtract(h2);
+	else if(this->isNegative == 0 && h.isNegative == 1){ // positive + negative is the same thing is positive - positive so call subtract after making h positive
+		HugeInteger hcopy(h);  //h is const cant edit fuck u
+		hcopy.isNegative = 0;
+		HugeInteger res = this->subtract(hcopy);
 		return res;
 	}
-	else if(this->isNegative == 1 && h.isNegative == 0){
-		HugeInteger h2(*this);
-		HugeInteger h3(h);
-		h2.isNegative = 0;
-		HugeInteger res = h2.subtract(h3);
+	else{
+		HugeInteger hugecopy(*this);                      //dereference hugeint so i can use it as an object
+		HugeInteger hcopy(h);                               //last case is negative(this) + positive(h) which is the same as h - huge.
+		hugecopy.isNegative = 0;
+		HugeInteger res = hcopy.subtract(hugecopy);
 		return res;
 	}
 
 }
-HugeInteger HugeInteger::subtract(const HugeInteger& h) const {
+HugeInteger HugeInteger::subtract(const HugeInteger& h) {
 
-	int temp_diff = 0, i = 0, j = 0;
+	if (compareTo(h) == 0){                     // if numbers are equivalent, difference will be 0
+		return HugeInteger("0");
+	}
+	if (this->isNegative == 0 && h.isNegative == 1){         //positive(huge) - negative(h) is the same as huge + h
+		HugeInteger hugecopy(*this);
+		HugeInteger hcopy(h);
+		hcopy.isNegative = 0;                                //set h to positive and call add method
+		HugeInteger res = hugecopy.add(hcopy);
+		return res;
+	}
+
+	else if (this->isNegative == 1 && h.isNegative == 0){   //negative(huge) - positive(h) is the same as (huge + h)*-1
+
+		HugeInteger hugecopy(*this);                //dereference so we can use
+		HugeInteger hcopy(h);
+		hugecopy.isNegative = 0;
+		HugeInteger res = hugecopy.add(hcopy);
+		res.isNegative = 1;
+		return res;
+	}
+
+	int carry = 0, temp_diff = 0;           //initialize variables
 	int huge_size = huge.size();
 	int h_size = h.huge.size();
 
-	vector<int> difference;
+	vector <int> num1;
+	vector <int> num2;
 
-	if (huge_size > h_size){
-		i = huge_size - 1;
-		j = h_size - 1;
+	vector <int> diff;
 
-
-		while (j >= 0){
-
-			temp_diff = huge[i] - h.huge[j];
-
-			if (temp_diff < 0){
-				temp_diff = (temp_diff * -1);
-				huge[i-1] = huge[i-1] - 1;
-			}
-
-			else if (huge[i-1] == 0){
-					huge[i-1] = 9;
-					huge[i-2] = huge[i-2] - 1;
-				}
-
-
-			difference.insert(difference.begin(),(temp_diff));
-
-			i--;
-			j--;
+	if (huge_size != h_size){            //means theyre not the same length - algorithm needed to do computation
+		if (huge_size < h_size){         //num 2 is set to the SHORTER value
+			num2 = huge;
+			num1 = h.huge;
 		}
-
-		while (i >= 0){
-			temp_diff = huge[i];
-			difference.insert(difference.begin(),(temp_diff));
-
-			i--;
+		else{
+			num1 = huge;
+			num2 = h.huge;
 		}
 	}
+	else{
+		if ((h.isNegative == 1 && this->isNegative == 1 && this->compareTo(h) > 0) || (h.isNegative == 0 && this->isNegative == 0 && this->compareTo(h) < 0)){ //num2 holds the SMALLER value
 
-	return HugeInteger(difference);
+				num2 = huge;
+				num1 = h.huge;
+			}
+			else{
+				num2 = h.huge;
+				num1 = huge;
+			}
+	}
+
+
+	std::reverse(num1.begin(), num1.end());  //reverse both strings as it is needed for our algorithm implementation
+	std::reverse(num2.begin(), num2.end());
+
+	for (int i = 0; i < num2.size(); i++){          //loop through till the end of the smaller string finding out the difference one by one.
+
+		temp_diff = num1[i] - num2[i] - carry;   //store it in a variable called temp diff
+
+		if (temp_diff < 0){                      //if temp diff is negative, we know we will have a carry.
+			temp_diff = temp_diff + 10;          // temp_diff needs to be appended so add 10 and store it.
+			carry = 1;
+		}
+		else{
+			carry = 0;
+		}
+		diff.push_back(temp_diff);               //append temp diff
+	}
+
+	for (int i = num2.size(); i < num1.size(); i++){            //drop the rest of our values down, remaining indicies after looping through the smaller number
+		temp_diff = num1[i] - carry;
+
+		if (temp_diff < 0){
+			temp_diff = temp_diff + 10;
+			carry = 1;
+		}
+		else{
+			carry = 0;
+		}
+		diff.push_back(temp_diff);
+	}
+	std::reverse(diff.begin(), diff.end());           // we now have our difference integer vector, but we must reverse it to give us an actual number
+
+	while (diff[0] == 0){                           //eliminate any leading 0's
+			diff.erase(diff.begin());
+		}
+	HugeInteger res(diff);                             //duplicate difference to result
+
+	if (compareTo(h) < 0){                  //in both remaining cases, + (-) + and - (-) -, if huge is smaller than h we will get a negative value. Therefore, set res.isNegative true.
+		res.isNegative = 1;
+	}
+	return res;
+
+
 }
 
 HugeInteger HugeInteger::multiply(const HugeInteger& h) {
-	// TODO
-	return HugeInteger("");
+
+	int carry = 0, temp_prod = 0;             //initialize variables
+	int h_size = h.huge.size();
+	int huge_size = huge.size();
+
+	int idx1 = 0;                             //initialize index counters
+	int idx2 = 0;
+
+	vector<int> product(h_size + huge_size, 0);   //initialize a integer vector with appropriate product size filled with 0's
+	HugeInteger* res;                             //create a null pointer
+
+	if (huge[0] == 0 || h.huge[0] == 0){          //if the first digit is 0, output will also be 0 cause x*0 = 0.
+		return HugeInteger("0");
+	}
+
+
+	for (int i = (huge_size - 1); i >= 0; i--){   //iterate from the right side of the operand
+
+		carry = 0;
+		idx2 = 0;
+
+		for (int j = (h_size - 1); j >= 0; j--){   //iterate from the right side of the operand
+			temp_prod = huge[i] * h.huge[j] + product[idx1 + idx2] + carry;  //create a temp product which contains the digit we need at the end
+			product[idx1 + idx2] = temp_prod % 10;  //digit is isolated for and appended
+			carry = temp_prod/10;                //the carry value can be obtained by integer division of temp prod
+			idx2++;                              //increment our index counter
+		}
+		if (carry > 0){
+			product[idx1 + idx2] +=carry;        //now append our carry value into the next index
+		}
+		idx1++;                                  //increment second index counter
+	}
+	std::reverse(product.begin(), product.end());  //after looping is finished, we must reverse our product as it was made from left to right
+
+	if (product[0] == 0){                          //get rid of leading 0's
+		product.erase(product.begin());
+	}
+
+	HugeInteger* temp = new HugeInteger(product);  //creates a new HugeInteger of product and temp points to it
+	res = temp;                                    // make res and temp point to the same thing
+
+	 if ((this->isNegative == 1 && h.isNegative == 0) || (this->isNegative == 0 && h.isNegative == 1)){  //negative times positive is always negative
+
+		 res->isNegative = 1;
+	}
+
+	return *res;    //dereference the pointer and return the object res was pointing to (product)
 }
 
 int HugeInteger::compareTo(const HugeInteger& h) {
-	// TODO
-	return 0;
+	int flag = 0;
+	int huge_size = huge.size();
+	int h_size = h.huge.size();
+
+	if (toString() == h.toString()){
+		return 0;
+	}
+
+	if (isNegative == 0 && h.isNegative == 0){  //case where both are positive
+
+		if (h_size > huge_size){
+			flag = -1;
+		}
+		else if (h_size < huge_size){
+			flag = 1;
+		}
+		else if (h_size == huge_size){
+			if (h.huge[0] > huge[0]){
+				flag = -1;
+			}
+			else{
+				flag = 1;
+			}
+		}
+	}
+
+	else if (h.isNegative == 0 && isNegative == 1){  //cases when either one is positive and the other is negative
+		flag = -1;
+	}
+	else if (h.isNegative == 1 && isNegative == 0){
+		flag = 1;
+	}
+	else if (isNegative == 1 && h.isNegative == 1){ //case where both are negative
+
+		if (h_size > huge_size){
+			flag = 1;
+		}
+		else if (h_size < huge_size){
+			flag = -1;
+		}
+		else if (h_size == huge_size){
+			if (h.huge[0] > huge[0]){
+				flag = 1;
+			}
+			else{
+				flag = -1;
+			}
+		}
+	}
+
+	return flag;
 }
 
-std::string HugeInteger::toString() {
+std::string HugeInteger::toString() const{
 
 	string back_to_string = "";
 	int n = huge.size();
